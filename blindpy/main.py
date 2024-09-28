@@ -88,7 +88,6 @@ def seal(video_path, result_path, output_video_path, style, draw_image_path, sho
     print(f"size: ({info.width}, {info.height}), fps: {info.fps:1.2f}, num: {info.frame_num}")
 
     results = pd.read_csv(result_path, header=0)
-    print(results)
 
     fmt = cv2.VideoWriter_fourcc(*"mp4v")
     writer = cv2.VideoWriter(
@@ -118,18 +117,11 @@ def seal(video_path, result_path, output_video_path, style, draw_image_path, sho
                 plt.imshow(img)
                 plt.show()
                 return
-        pass
 
-    # img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         writer.write(img)
 
     video.release()
     writer.release()
-
-
-
-
-
 
 
 def entry_point():

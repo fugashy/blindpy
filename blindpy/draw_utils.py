@@ -14,9 +14,13 @@ def draw_image(img, result, pargs):
     # アルファ値込みで使いたい
     overlay_img = cv2.imread(pargs["draw_image"], cv2.IMREAD_UNCHANGED)
 
-    # TODO(fugashy) 大きい順にソートしたほうがいい
+    widths = result["x2"] - result["x1"]
+    heights = result["y2"] - result["y1"]
+    rs = result.copy()
+    rs["largeness"] = widths * heights
+    rs = rs.sort_values(by="largeness", ascending=True)
 
-    for r in result.itertuples():
+    for r in rs.itertuples():
         # 描画領域の左上と右下座標
         rect_width = round(r.x2) - round(r.x1)
         rect_height = round(r.y2) - round(r.y1)
