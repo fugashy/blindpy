@@ -3,3 +3,5 @@ torch
 ultralytics
 pandas
 opencv-python
+moviepy
+tqdm

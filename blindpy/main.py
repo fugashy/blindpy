@@ -6,6 +6,8 @@ from ultralytics import YOLO
 import torch
 import pandas as pd
 import cv2
+import moviepy.editor as mp
+from tqdm import tqdm
 
 from . import draw_utils
 
@@ -78,7 +80,7 @@ def get_video_info(video):
 @blindpy.command()
 @click.argument("video_path", type=str)
 @click.option("--result_path", type=str, default="/tmp/blindpy-yolo-results.txt")
-@click.option("--output_video_path", type=str, default="/tmp/blindpy-blinden.mp4")
+@click.option("--output_video_path", type=str, default="/tmp/blindpy.mp4")
 @click.option("--style", type=click.Choice(["rect", "image"]), default="rect")
 @click.option("--draw_image_path", type=str, default="")
 @click.option("--show-once", is_flag=True, default=False)
@@ -90,15 +92,17 @@ def seal(video_path, result_path, output_video_path, style, draw_image_path, sho
     results = pd.read_csv(result_path, header=0)
 
     fmt = cv2.VideoWriter_fourcc(*"mp4v")
+    tmp_video_path = "/tmp/tmp.mp4"
     writer = cv2.VideoWriter(
-            output_video_path,
+            tmp_video_path,
             fmt,
             info.fps, (info.width, info.height))
     if not writer.isOpened():
         print("failed to create a writer")
         return
 
-    for frame_id in range(info.frame_num):
+    print("try to process all frames...")
+    for frame_id in tqdm(range(info.frame_num)):
         ret, img = video.read()
         if not ret:
             print(f"failed to read image[{frame_id}]")
@@ -122,6 +126,20 @@ def seal(video_path, result_path, output_video_path, style, draw_image_path, sho
 
     video.release()
     writer.release()
+
+    # 音声をつける
+    print("try to set audio...")
+    clip_input = mp.VideoFileClip(video_path)
+    clip_input.audio.write_audiofile("/tmp/audio.mp3")
+    clip = mp.VideoFileClip(tmp_video_path)
+    audio = mp.AudioFileClip("/tmp/audio.mp3")
+    clip = clip.set_audio(audio)
+    clip.write_videofile(
+            output_video_path,codec='libx264',
+            audio_codec='aac',
+            temp_audiofile='temp-audio.m4a',
+            remove_temp=True)
+
 
 
 def entry_point():
