@@ -7,7 +7,8 @@ import torch
 import pandas as pd
 import cv2
 
-import time
+from . import draw_utils
+
 
 
 _COLUMN_NAMES = [
@@ -76,9 +77,12 @@ def get_video_info(video):
 
 @blindpy.command()
 @click.argument("video_path", type=str)
-@click.argument("result_path", type=str)
+@click.option("--result_path", type=str, default="/tmp/blindpy-yolo-results.txt")
 @click.option("--output_video_path", type=str, default="/tmp/blindpy-blinden.mp4")
-def seal(video_path, result_path, output_video_path):
+@click.option("--style", type=click.Choice(["rect", "image"]), default="rect")
+@click.option("--draw_image_path", type=str, default="")
+@click.option("--show-once", is_flag=True, default=False)
+def seal(video_path, result_path, output_video_path, style, draw_image_path, show_once):
     video = cv2.VideoCapture(video_path)
     info = get_video_info(video)
     print(f"size: ({info.width}, {info.height}), fps: {info.fps:1.2f}, num: {info.frame_num}")
@@ -100,16 +104,24 @@ def seal(video_path, result_path, output_video_path):
         if not ret:
             print(f"failed to read image[{frame_id}]")
             break
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
         result = results[results["frame_id"] == frame_id]
         if not result.empty:
-            pass
+            img = draw_utils.call(
+                    style,
+                    img,
+                    result,
+                    {
+                        "draw_image": draw_image_path,
+                    })
+            if show_once:
+                import matplotlib.pyplot as plt
+                plt.imshow(img)
+                plt.show()
+                return
+        pass
 
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+    # img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         writer.write(img)
-
-    time.sleep(1)
 
     video.release()
     writer.release()
