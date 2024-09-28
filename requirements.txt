@@ -2,3 +2,4 @@ click
 torch
 ultralytics
 pandas
+opencv-python
